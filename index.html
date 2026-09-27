@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Номад — этно-кафе</title>
+<meta name="description" content="Номад — этно-кафе с блюдами кочевой кухни: буузы, хушуур, шулэн, бухлёр. Меню, отзывы гостей и адрес.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ===== Design tokens ===== */
+  :root{
+    --ash:#211815;         /* primary dark background */
+    --ash-2:#2a201b;       /* slightly lighter panel on ash */
+    --bone:#f3ead9;        /* warm parchment, light bg / dark-bg text */
+    --bone-dim:#cdbfa8;    /* muted parchment for secondary text on ash */
+    --ink:#2a211b;         /* body text on light backgrounds */
+    --ink-dim:#5c5044;     /* secondary text on light backgrounds */
+    --brass:#c08a3e;       /* primary accent, CTA */
+    --brass-deep:#93672c;  /* brass hover / pressed */
+    --juniper:#4b5d46;     /* secondary accent (badges, rules) */
+    --ember:#9c4a32;       /* tertiary accent (stars, small marks on light bg) */
+    --line:rgba(243,234,217,0.16); /* hairline on ash */
+    --line-light:rgba(42,33,27,0.14); /* hairline on bone */
+    --radius:2px;
+    --container:72rem;
+  }
+  /* Single deliberate brand theme — stays constant across viewer light/dark settings */
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ash:#211815; --bone:#f3ead9; --brass:#c08a3e; --juniper:#4b5d46; --ember:#9c4a32;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ash:#211815; --bone:#f3ead9; --brass:#c08a3e; --juniper:#4b5d46; --ember:#9c4a32;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{
+    scroll-behavior:smooth;
+    scroll-padding-top: calc(4.75rem + env(safe-area-inset-top,0px));
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *,*::before,*::after{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+  }
+  body{
+    margin:0;
+    background:var(--ash);
+    color:var(--bone);
+    font-family:'Manrope', 'Segoe UI', system-ui, sans-serif;
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    overflow-x:hidden;
+  }
+  h1,h2,h3,h4{
+    font-family:'PT Serif', Georgia, serif;
+    font-weight:700;
+    line-height:1.15;
+    margin:0 0 0.6em;
+    letter-spacing:-0.01em;
+  }
+  p{ margin:0 0 1em; }
+  a{ color:inherit; }
+  img,svg{ display:block; max-width:100%; }
+  .container{ max-width:var(--container); margin-inline:auto; padding-inline:1.5rem; }
+  @media (min-width:768px){ .container{ padding-inline:2.5rem; } }
+
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+  .skip-link{
+    position:absolute; left:1rem; top:-4rem;
+    background:var(--brass); color:var(--ash); padding:0.7em 1.2em;
+    border-radius:var(--radius); z-index:200; transition:top 0.2s ease;
+    font-weight:600; text-decoration:none;
+  }
+  .skip-link:focus{ top: calc(env(safe-area-inset-top,0px) + 0.75rem); }
+
+  :focus-visible{ outline:3px solid var(--brass); outline-offset:3px; }
+  button{ font:inherit; }
+
+  /* ===== Header / nav ===== */
+  .site-header{
+    position:sticky; top:0; z-index:100;
+    padding-top:env(safe-area-inset-top,0px);
+    background:rgba(33,24,21,0.92);
+    backdrop-filter:saturate(140%) blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .header-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    min-height:4.75rem;
+  }
+  .logo{
+    display:flex; flex-direction:column; text-decoration:none; color:var(--bone);
+    font-family:'PT Serif', Georgia, serif; font-weight:700; font-size:1.5rem; letter-spacing:0.01em;
+  }
+  .logo-sub{
+    font-family:'Manrope', sans-serif; font-weight:500; font-size:0.6875rem;
+    color:var(--brass); letter-spacing:0.08em; margin-top:0.1em;
+  }
+  .nav-toggle{
+    display:none; background:none; border:1px solid var(--line); color:var(--bone);
+    width:2.75rem; height:2.75rem; border-radius:var(--radius); cursor:pointer;
+    align-items:center; justify-content:center;
+  }
+  .nav-list{
+    display:flex; gap:2rem; list-style:none; margin:0; padding:0;
+  }
+  .nav-list a{
+    text-decoration:none; font-size:0.9375rem; font-weight:500; color:var(--bone-dim);
+    padding:0.4em 0.1em; border-bottom:2px solid transparent;
+  }
+  .nav-list a:hover{ color:var(--bone); }
+  .nav-list a[aria-current="page"]{ color:var(--brass); border-bottom-color:var(--brass); }
+
+  @media (max-width:860px){
+    .nav-toggle{ display:inline-flex; }
+    .nav-list{
+      position:fixed; inset:calc(4.75rem + env(safe-area-inset-top,0px)) 0 auto 0;
+      flex-direction:column; gap:0; background:var(--ash); border-bottom:1px solid var(--line);
+      padding:0.5rem 1.5rem 1.5rem; transform:translateY(-8px); opacity:0; pointer-events:none;
+      transition:opacity 0.18s ease, transform 0.18s ease;
+    }
+    .nav-list.is-open{ opacity:1; transform:translateY(0); pointer-events:auto; }
+    .nav-list li{ border-bottom:1px solid var(--line); }
+    .nav-list a{ display:block; padding:0.9em 0.1em; }
+  }
+
+  /* ===== Ornament (koshkar-muyiz strip) ===== */
+  .ornament-strip{ width:100%; height:1.1rem; color:var(--brass); opacity:0.65; }
+  .ornament-strip.on-bone{ color:var(--juniper); opacity:0.55; }
+
+  /* ===== Layout helpers ===== */
+  .page{ padding-block:3.5rem 5rem; }
+  .page-head{ max-width:42rem; margin-bottom:2.5rem; }
+  .eyebrow{
+    color:var(--brass); font-weight:600; font-size:0.875rem; margin-bottom:0.75rem; display:block;
+  }
+  .lede{ color:var(--bone-dim); font-size:1.0625rem; max-width:38rem; }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:0.5em; text-decoration:none;
+    font-weight:600; font-size:0.9375rem; padding:0.85em 1.6em; border-radius:var(--radius);
+    border:1px solid transparent; cursor:pointer; transition:background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .btn-primary{ background:var(--brass); color:var(--ash); }
+  .btn-primary:hover{ background:var(--bone); }
+  .btn-ghost{ border-color:var(--line); color:var(--bone); }
+  .btn-ghost:hover{ border-color:var(--brass); color:var(--brass); }
+  .btn-row{ display:flex; flex-wrap:wrap; gap:1rem; margin-top:2rem; }
+
+  /* ===== Home / hero ===== */
+  #page-home{ padding-top:0; }
+  .hero{
+    position:relative; overflow:hidden;
+    padding-block: 4.5rem 3rem;
+    border-bottom:1px solid var(--line);
+  }
+  .hero-inner{ position:relative; z-index:2; max-width:38rem; }
+  .hero h1{ font-size:clamp(2.25rem, 5vw + 1rem, 3.75rem); }
+  .hero .lede{ font-size:1.1875rem; max-width:34rem; }
+  .hero-glyph{
+    position:absolute; right:-4rem; top:50%; transform:translateY(-50%);
+    width:26rem; color:var(--brass); opacity:0.12; z-index:1;
+  }
+  @media (max-width:860px){ .hero-glyph{ display:none; } }
+
+  .manifesto{
+    display:grid; grid-template-columns:1.3fr 1fr; gap:3rem; align-items:center;
+    padding-block:4rem;
+  }
+  @media (max-width:860px){ .manifesto{ grid-template-columns:1fr; } }
+  .manifesto blockquote{
+    margin:0; font-family:'PT Serif', serif; font-style:italic; font-size:1.375rem;
+    line-height:1.5; color:var(--bone); border-left:2px solid var(--brass); padding-left:1.25rem;
+  }
+  .manifesto blockquote cite{
+    display:block; font-style:normal; font-family:'Manrope',sans-serif; font-size:0.875rem;
+    color:var(--brass-deep); margin-top:1rem; color:var(--brass);
+  }
+  .compass{ color:var(--juniper); width:100%; max-width:14rem; margin-inline:auto; opacity:0.9; }
+
+  .why-teaser{ padding-block:4rem; border-top:1px solid var(--line); }
+  .reason-list{ margin:0; padding:0; display:grid; gap:0; border-top:1px solid var(--line); }
+  .reason-list > div{
+    display:grid; grid-template-columns:14rem 1fr; gap:2rem; padding:1.5rem 0;
+    border-bottom:1px solid var(--line);
+  }
+  @media (max-width:700px){ .reason-list > div{ grid-template-columns:1fr; gap:0.4rem; } }
+  .reason-list dt{ font-family:'PT Serif',serif; font-weight:700; font-size:1.0625rem; }
+  .reason-list dd{ margin:0; color:var(--bone-dim); }
+
+  .section-light{ background:var(--bone); color:var(--ink); }
+  .section-light .lede{ color:var(--ink-dim); }
+  .section-light .eyebrow{ color:var(--brass-deep); }
+
+  .teaser-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:2.5rem; padding-block:4rem; }
+  @media (max-width:780px){ .teaser-grid{ grid-template-columns:1fr; gap:3rem; } }
+  .teaser-block h3{ font-size:1.375rem; margin-bottom:0.5rem; }
+  .dish-line{
+    display:flex; align-items:baseline; gap:0.5rem; padding:0.6rem 0; border-bottom:1px solid var(--line-light);
+  }
+  .dish-line .name{ font-weight:600; }
+  .dish-line .fill{ flex:1; border-bottom:1px dotted var(--ink-dim); opacity:0.5; height:0.5em; }
+  .dish-line .tbd{ font-size:0.8125rem; color:var(--ink-dim); white-space:nowrap; }
+
+  .quote-mini{ padding:1.25rem 0; border-bottom:1px solid var(--line-light); }
+  .quote-mini p{ font-family:'PT Serif',serif; font-style:italic; margin-bottom:0.4rem; }
+  .quote-mini cite{ font-style:normal; font-size:0.8125rem; color:var(--ink-dim); }
+
+  .contact-strip{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:4.5rem; padding-block:3.5rem;
+    border-top:1px solid var(--line);
+  }
+  @media (max-width:780px){ .contact-strip{ grid-template-columns:1fr; } }
+  .contact-strip h4{ font-size:0.8125rem; text-transform:none; color:var(--brass); font-family:'Manrope',sans-serif; font-weight:700; margin-bottom:0.5rem; }
+  .placeholder{ border-bottom:1px dashed var(--bone-dim); }
+  .addr-sub{ display:block; color:var(--bone-dim); font-size:0.875rem; margin-top:0.25rem; }
+
+  /* ===== Menu page ===== */
+  .note-banner{
+    background:var(--ash-2); border:1px solid var(--line); border-left:3px solid var(--brass);
+    padding:1rem 1.25rem; border-radius:var(--radius); color:var(--bone-dim); font-size:0.9375rem;
+    max-width:42rem; margin-bottom:2.5rem;
+  }
+  .menu-grid{ display:grid; gap:3rem; grid-template-columns:repeat(auto-fit, minmax(15rem,1fr)); align-items:start; }
+  @media (max-width:780px){ .menu-grid{ grid-template-columns:1fr; } }
+  .menu-cat h3{ font-size:1.25rem; border-bottom:1px solid var(--line); padding-bottom:0.6rem; margin-bottom:0.25rem; }
+  .menu-item{ display:flex; align-items:baseline; gap:0.6rem; padding:0.85rem 0; border-bottom:1px solid var(--line); }
+  .menu-item .name{ font-weight:600; }
+  .menu-item .desc{ display:block; font-size:0.875rem; color:var(--bone-dim); font-weight:400; margin-top:0.2rem; }
+  .menu-item .fill{ flex:1; border-bottom:1px dotted var(--bone-dim); opacity:0.4; height:0.6em; align-self:flex-end; }
+  .menu-item .price{ font-size:0.8125rem; color:var(--bone-dim); white-space:nowrap; }
+
+  /* ===== Reviews ===== */
+  .review-grid{ display:grid; gap:1.75rem; grid-template-columns:repeat(3,1fr); }
+  @media (max-width:960px){ .review-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:640px){ .review-grid{ grid-template-columns:1fr; } }
+  .review-card{
+    background:var(--ash-2); border:1px solid var(--line); border-radius:var(--radius);
+    padding:1.5rem; display:flex; flex-direction:column; gap:0.75rem;
+  }
+  .review-top{ display:flex; align-items:center; gap:0.75rem; }
+  .avatar{
+    width:2.5rem; height:2.5rem; border-radius:50%; background:var(--juniper); color:var(--bone);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-family:'PT Serif',serif; flex-shrink:0;
+  }
+  .review-name{ font-weight:600; font-size:0.9375rem; }
+  .review-city{ font-size:0.8125rem; color:var(--bone-dim); }
+  .stars{ color:var(--brass); letter-spacing:0.1em; font-size:0.875rem; }
+  .review-card blockquote{ margin:0; font-family:'PT Serif',serif; font-style:italic; line-height:1.55; }
+
+  /* ===== About / Why us page ===== */
+  .about-lead{ font-family:'PT Serif',serif; font-style:italic; font-size:1.5rem; line-height:1.5; max-width:36rem; margin-bottom:2.5rem; color:var(--bone); }
+  .reason-list.full > div{ grid-template-columns:16rem 1fr; }
+  @media (max-width:700px){ .reason-list.full > div{ grid-template-columns:1fr; } }
+
+  /* ===== Contacts ===== */
+  .contacts-grid{ display:grid; grid-template-columns:1.1fr 1fr; gap:3rem; }
+  @media (max-width:860px){ .contacts-grid{ grid-template-columns:1fr; } }
+  .info-row{ display:flex; gap:1rem; padding:1rem 0; border-bottom:1px solid var(--line); }
+  .info-row h4{ font-family:'Manrope',sans-serif; font-weight:700; font-size:0.8125rem; color:var(--brass); min-width:8rem; margin:0; }
+  table.hours{ width:100%; border-collapse:collapse; margin-top:0.5rem; }
+  table.hours td{ padding:0.5rem 0; border-bottom:1px solid var(--line); }
+  table.hours td:last-child{ text-align:right; color:var(--bone-dim); }
+  .social-row{ display:flex; gap:1rem; margin-top:1.5rem; }
+  .social-row a{ text-decoration:none; border:1px solid var(--line); padding:0.6em 1.1em; border-radius:var(--radius); font-size:0.875rem; font-weight:600; }
+  .social-row a:hover{ border-color:var(--brass); color:var(--brass); }
+  .map-mark{ color:var(--juniper); width:100%; max-width:16rem; margin-inline:auto; }
+
+  /* ===== Footer ===== */
+  footer{ border-top:1px solid var(--line); padding-block:3rem; }
+  .footer-inner{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:2rem; align-items:flex-start; }
+  .footer-nav{ display:flex; gap:1.5rem; list-style:none; margin:0; padding:0; flex-wrap:wrap; }
+  .footer-nav a{ text-decoration:none; color:var(--bone-dim); font-size:0.875rem; }
+  .footer-nav a:hover{ color:var(--brass); }
+  .fine-print{ font-size:0.8125rem; color:var(--bone-dim); margin-top:2rem; }
+
+  /* one orchestrated entrance moment for the hero only */
+  .hero-inner > *{ opacity:0; transform:translateY(10px); animation:rise 0.7s ease forwards; }
+  .hero-inner > *:nth-child(1){ animation-delay:0.05s; }
+  .hero-inner > *:nth-child(2){ animation-delay:0.16s; }
+  .hero-inner > *:nth-child(3){ animation-delay:0.27s; }
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+  @media (prefers-reduced-motion: reduce){ .hero-inner > *{ opacity:1; transform:none; animation:none; } }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Перейти к содержимому</a>
+
+<header class="site-header">
+  <div class="header-inner container">
+    <a href="#home" class="logo" data-nav data-target="home">Номад<span class="logo-sub">этно-кафе</span></a>
+    <nav aria-label="Основная навигация">
+      <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navList">
+        <span class="sr-only">Открыть меню навигации</span>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M2 5H18M2 10H18M2 15H18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+      <ul class="nav-list" id="navList">
+        <li><a href="#home" data-nav data-target="home">Главная</a></li>
+        <li><a href="#menu" data-nav data-target="menu">Меню</a></li>
+        <li><a href="#reviews" data-nav data-target="reviews">Отзывы</a></li>
+        <li><a href="#about" data-nav data-target="about">Почему мы</a></li>
+        <li><a href="#contacts" data-nav data-target="contacts">Контакты</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ================= HOME ================= -->
+  <section class="page" id="page-home" data-page="home">
+    <div class="hero">
+      <div class="container hero-inner">
+        <h1 tabindex="-1">Номад</h1>
+        <p class="lede">Вкусно и с душой! Этно-кафе с бурятской кухней и европейской кухней.</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="#menu" data-nav data-target="menu">Смотреть меню</a>
+          <a class="btn btn-ghost" href="#reviews" data-nav data-target="reviews">Читать отзывы</a>
+        </div>
+      </div>
+      <svg class="hero-glyph" viewBox="0 0 400 400" aria-hidden="true">
+        <path d="M60 300 L140 140 L200 220 L260 100 L340 300 Z" fill="none" stroke="currentColor" stroke-width="2"/>
+        <line x1="200" y1="220" x2="200" y2="40" stroke="currentColor" stroke-width="2"/>
+        <path d="M170 40 Q200 10 230 40" fill="none" stroke="currentColor" stroke-width="2"/>
+      </svg>
+    </div>
+
+    <svg class="ornament-strip container" viewBox="0 0 600 20" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <pattern id="hornPattern" width="46" height="20" patternUnits="userSpaceOnUse">
+          <path d="M2 18 Q2 6 12 6 Q20 6 20 14 Q20 18 24 18 Q24 6 32 6 Q42 6 42 18" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        </pattern>
+      </defs>
+      <rect width="600" height="20" fill="url(#hornPattern)"/>
+    </svg>
+
+    <div class="container why-teaser">
+      <span class="eyebrow">Почему мы</span>
+      <h2 style="max-width:30rem;">Концепция свободы, натуральности и гостеприимства</h2>
+      <dl class="reason-list">
+        <div><dt>Есть столики на улице</dt><dd>В тёплую погоду можно устроиться на свежем воздухе — просто скажите об этом при входе.</dd></div>
+        <div><dt>Дастархан для компании</dt><dd>Большие столы для семей и друзей — рассаживаем так, как принято в степи.</dd></div>
+        <div><dt>Ничего из заморозки</dt><dd>Буузы и хушуур лепим и жарим сами каждый день, без полуфабрикатов.</dd></div>
+      </dl>
+      <div class="btn-row"><a class="btn btn-ghost" href="#about" data-nav data-target="about">Все причины выбрать нас</a></div>
+    </div>
+
+    <div class="section-light">
+      <div class="container teaser-grid">
+        <div class="teaser-block">
+          <span class="eyebrow">Из меню</span>
+          <h3>Горячее и выпечка</h3>
+          <div class="dish-line"><span class="name">Бухлёр из говядины</span><span class="fill"></span><span class="tbd">390 ₽</span></div>
+          <div class="dish-line"><span class="name">Хушуур с мясом и сыром</span><span class="fill"></span><span class="tbd">239 ₽</span></div>
+          <div class="dish-line"><span class="name">Бууза</span><span class="fill"></span><span class="tbd">90 ₽</span></div>
+          <div class="btn-row" style="margin-top:1.5rem;"><a class="btn btn-ghost" href="#menu" data-nav data-target="menu">Открыть полное меню</a></div>
+        </div>
+        <div class="teaser-block">
+          <span class="eyebrow">Отзывы гостей</span>
+          <h3>Что говорят о Номад</h3>
+          <div class="quote-mini">
+            <p>«По вкусу блюда очень понравились, размер порций средний. Готовят быстро, ожидание минимально. В зале чисто, понравилась идея с чайным столом. Персонал приветливый, меню всё в наличии есть. Окрошка фаворит) будем заходить ещё!»</p>
+            <cite>Олеся К.</cite>
+          </div>
+          <div class="quote-mini">
+            <p>«Буузы хорошие, жареха подкачала — оочень много масла. Периодически едим в данной сети. Интерьер приятный, чисто, летом прохладно».</p>
+            <cite>Аюна Асалханова</cite>
+          </div>
+          <div class="btn-row" style="margin-top:1.5rem;"><a class="btn btn-ghost" href="#reviews" data-nav data-target="reviews">Все отзывы</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container contact-strip">
+      <div><h4>Адрес</h4><p>Рынок Новый, Советская улица, 58 к2, 1 этаж<span class="addr-sub">Октябрьский район, Иркутск, 664047</span></p></div>
+      <div><h4>Часы работы</h4><p>Ежедневно с 09:00 до 20:00</p></div>
+      <div><h4>Телефон</h4><p><a href="tel:+79149150009">+7 914 915-00-09</a></p></div>
+    </div>
+  </section>
+
+  <!-- ================= MENU ================= -->
+  <section class="page" id="page-menu" data-page="menu" hidden>
+    <div class="container">
+      <div class="page-head">
+        <span class="eyebrow">Меню</span>
+        <h1 tabindex="-1">Меню Номад</h1>
+        <p class="lede">Буузы, хушуур, наваристые бульоны и домашние морсы — без сокращений и полуфабрикатов.</p>
+      </div>
+      <div class="menu-grid">
+        <div class="menu-cat">
+          <h3>Салаты</h3>
+          <div class="menu-item"><span><span class="name">По-корейски</span></span><span class="fill"></span><span class="price">129 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Свекольный с сыром</span></span><span class="fill"></span><span class="price">139 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Летний</span></span><span class="fill"></span><span class="price">129 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Азиатский с говядиной</span></span><span class="fill"></span><span class="price">229 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Цезарь с курицей</span></span><span class="fill"></span><span class="price">289 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Курица с ананасом</span></span><span class="fill"></span><span class="price">199 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Греческий</span></span><span class="fill"></span><span class="price">219 ₽</span></div>
+        </div>
+        <div class="menu-cat">
+          <h3>Супы</h3>
+          <div class="menu-item"><span><span class="name">Шулэн с говядиной</span></span><span class="fill"></span><span class="price">309 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Шулэн с курицей</span></span><span class="fill"></span><span class="price">309 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Борщ</span></span><span class="fill"></span><span class="price">309 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Лагман</span></span><span class="fill"></span><span class="price">329 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Бухлеор из говядины</span><span class="desc">Бухлёр — ароматный мясной суп на наваристом бульоне, с мясом на кости, картофелем</span></span><span class="fill"></span><span class="price">390 ₽</span></div>
+        </div>
+        <div class="menu-cat">
+          <h3>Горячие блюда</h3>
+          <div class="menu-item"><span><span class="name">Бууза</span></span><span class="fill"></span><span class="price">90 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Бууза жареная</span></span><span class="fill"></span><span class="price">93 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Жареная лапша с курицей в сливочном соусе</span></span><span class="fill"></span><span class="price">360 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Жареная лапша с говядиной в устричном соусе</span></span><span class="fill"></span><span class="price">370 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Плов с говядиной</span></span><span class="fill"></span><span class="price">290 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Цуйван</span><span class="desc">Вкусная лапша с мясом и овощами — одно из самых популярных блюд монгольской кухни</span></span><span class="fill"></span><span class="price">360 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Жареха со свининой на сковороде</span><span class="desc">Нежная свинина, тушёная с картофелем, луком и помидорами. Подаётся на сковороде</span></span><span class="fill"></span><span class="price">420 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Хушур с мясом и соусом</span></span><span class="fill"></span><span class="price">219 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Хушур с мясом и сыром</span></span><span class="fill"></span><span class="price">239 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Хушур с сыром и соусом</span></span><span class="fill"></span><span class="price">219 ₽</span></div>
+        </div>
+        <div class="menu-cat">
+          <h3>Десерты и выпечка</h3>
+          <div class="menu-item"><span><span class="name">Боовы</span></span><span class="fill"></span><span class="price">99 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Сгущёнка</span></span><span class="fill"></span><span class="price">40 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Хушуур с мясом</span></span><span class="fill"></span><span class="price">219 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Хушуур с мясом и сыром</span></span><span class="fill"></span><span class="price">239 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Хушуур с сыром</span></span><span class="fill"></span><span class="price">219 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Сметана</span></span><span class="fill"></span><span class="price">40 ₽</span></div>
+        </div>
+        <div class="menu-cat">
+          <h3>Напитки</h3>
+          <div class="menu-item"><span><span class="name">Морс брусничный</span></span><span class="fill"></span><span class="price">159 ₽</span></div>
+          <div class="menu-item"><span><span class="name">Морс облепиховый</span></span><span class="fill"></span><span class="price">159 ₽</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= REVIEWS ================= -->
+  <section class="page" id="page-reviews" data-page="reviews" hidden>
+    <div class="container">
+      <div class="page-head">
+        <span class="eyebrow">Отзывы</span>
+        <h1 tabindex="-1">Что говорят гости</h1>
+        <p class="lede">Отзывы гостей Номад.</p>
+      </div>
+      <div class="review-grid">
+        <div class="review-card">
+          <div class="review-top"><div class="avatar" aria-hidden="true">В</div><div><div class="review-name">Виктория Н.</div></div></div>
+          <div class="stars" aria-label="Оценка 5 из 5">★★★★★</div>
+          <blockquote>«Кааак же все вкусно 🤤 Божественные буузы, горячие и столько бульона в нем)) боовы пышные нежные, а хушуур хрустящий с соусом подают👍 за буузами теперь только к ним 🙌»</blockquote>
+        </div>
+        <div class="review-card">
+          <div class="review-top"><div class="avatar" aria-hidden="true">И</div><div><div class="review-name">Ирина</div></div></div>
+          <div class="stars" aria-label="Оценка 5 из 5">★★★★★</div>
+          <blockquote>«Мои абсолютные фавориты: хушур с мясом — просто восторг, мясо сочное, тесто тонкое и хрустящее, а боовы такие, что невозможно остановиться 🤤 Однозначно топ в моём личном рейтинге!»</blockquote>
+        </div>
+        <div class="review-card">
+          <div class="review-top"><div class="avatar" aria-hidden="true">А</div><div><div class="review-name">Андрей З.</div></div></div>
+          <div class="stars" aria-label="Оценка 5 из 5">★★★★★</div>
+          <blockquote>«Бузы очень вкусные!!! Тихое, спокойное место. Всегда чисто. Бизнес ланчи, сеты не дорого. Можно вкусно и недорого поесть. Бурятский чай божественно вкусный».</blockquote>
+        </div>
+        <div class="review-card">
+          <div class="review-top"><div class="avatar" aria-hidden="true">Т</div><div><div class="review-name">Тамара К.</div></div></div>
+          <div class="stars" aria-label="Оценка 5 из 5">★★★★★</div>
+          <blockquote>«Кафе очень понравилось. Вкусно, недорого. Столиков немного, чисто, аккуратно».</blockquote>
+        </div>
+        <div class="review-card">
+          <div class="review-top"><div class="avatar" aria-hidden="true">К</div><div><div class="review-name">Коля С.</div></div></div>
+          <div class="stars" aria-label="Оценка 5 из 5">★★★★★</div>
+          <blockquote>«Очень классное заведение, постоянно заказываю тут, очень вкусная еда, приятные и вежливые официанты и повара, самые вкусные буузы в городе!»</blockquote>
+        </div>
+        <div class="review-card">
+          <div class="review-top"><div class="avatar" aria-hidden="true">В</div><div><div class="review-name">Валентина</div></div></div>
+          <div class="stars" aria-label="Оценка 5 из 5">★★★★★</div>
+          <blockquote>«Хорошее кафе, вкусно готовят! Рекомендую 👍»</blockquote>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ABOUT / WHY US ================= -->
+  <section class="page" id="page-about" data-page="about" hidden>
+    <div class="container">
+      <div class="page-head">
+        <span class="eyebrow">Почему мы</span>
+        <h1 tabindex="-1">Не общепит с этническим декором, а настоящая кочевая кухня</h1>
+      </div>
+      <p class="about-lede">Номад начался с тоски по вкусу, который нельзя купить в супермаркете. Мы записали рецепты у кочевых семей и перенесли дастархан в кафе — без сокращений и полуфабрикатов.</p>
+
+      <dl class="reason-list full">
+        <div><dt>Лепим и варим у вас на глазах</dt><dd>Буузы лепим вручную, хушуур жарим при заказе — вы видите процесс, а не читаете о нём в меню.</dd></div>
+        <div><dt>Дастархан, а не столик на двоих</dt><dd>Большие компании рассаживаем за общий стол, как принято в степи — обсудите с нами формат заранее.</dd></div>
+        <div><dt>Ничего из заморозки</dt><dd>Буузы лепим сами каждый день, бульоны для шулэна и бухлёра варим с утра — без полуфабрикатов.</dd></div>
+        <div><dt>Без спешки</dt><dd>Хушуур и цуйван готовятся к заказу — просим заложить время, как в гостях у родни.</dd></div>
+        <div><dt>Напитки без концентратов</dt><dd>Морс брусничный и облепиховый варим сами, а не разводим из порошка.</dd></div>
+      </dl>
+
+      <div class="btn-row">
+        <a class="btn btn-primary" href="#menu" data-nav data-target="menu">Смотреть меню</a>
+        <a class="btn btn-ghost" href="#contacts" data-nav data-target="contacts">Как нас найти</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= CONTACTS ================= -->
+  <section class="page" id="page-contacts" data-page="contacts" hidden>
+    <div class="container">
+      <div class="page-head">
+        <span class="eyebrow">Контакты</span>
+        <h1 tabindex="-1">Как нас найти</h1>
+        <p class="lede">Ждём вас в Номад. Ниже — контактные данные; замените отмеченные поля на реальные перед публикацией.</p>
+      </div>
+      <div class="contacts-grid">
+        <div>
+          <div class="info-row"><h4>Адрес</h4><p>Рынок Новый, Советская улица, 58 к2, 1 этаж<span class="addr-sub">Октябрьский район, Иркутск, 664047</span></p></div>
+          <div class="info-row"><h4>На карте</h4><p><a href="https://go.2gis.com/Zh4c2" target="_blank" rel="noopener" style="color:var(--brass); font-weight:600;">Открыть в 2ГИС →</a></p></div>
+          <div class="info-row"><h4>Телефон</h4><p><a href="tel:+79149150009">+7 914 915-00-09</a></p></div>
+          <div>
+            <h4 style="font-family:'Manrope',sans-serif;font-weight:700;font-size:0.8125rem;color:var(--brass);margin-top:1.5rem;">Часы работы</h4>
+            <table class="hours">
+              <tr><td>Ежедневно</td><td>09:00–20:00</td></tr>
+            </table>
+          </div>
+        </div>
+        <div>
+          <svg class="map-mark" viewBox="0 0 160 160" role="img" aria-label="Декоративный знак расположения на карте">
+            <circle cx="80" cy="80" r="60" fill="none" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M80 40c-14 0-24 10-24 24 0 18 24 46 24 46s24-28 24-46c0-14-10-24-24-24z" fill="none" stroke="currentColor" stroke-width="2"/>
+            <circle cx="80" cy="64" r="8" fill="currentColor"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="container footer-inner">
+    <div>
+      <a href="#home" class="logo" data-nav data-target="home" style="margin-bottom:1rem;">Номад<span class="logo-sub">этно-кафе</span></a>
+      <p class="fine-print" style="margin-top:1rem;">© 2026 Номад. Этно-кафе кочевой кухни.</p>
+    </div>
+    <ul class="footer-nav">
+      <li><a href="#home" data-nav data-target="home">Главная</a></li>
+      <li><a href="#menu" data-nav data-target="menu">Меню</a></li>
+      <li><a href="#reviews" data-nav data-target="reviews">Отзывы</a></li>
+      <li><a href="#about" data-nav data-target="about">Почему мы</a></li>
+      <li><a href="#contacts" data-nav data-target="contacts">Контакты</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('[data-nav]'));
+  var navToggle = document.getElementById('navToggle');
+  var navList = document.getElementById('navList');
+  var valid = pages.map(function(p){ return p.getAttribute('data-page'); });
+
+  function showPage(target, opts){
+    opts = opts || {};
+    if(valid.indexOf(target) === -1) target = 'home';
+    pages.forEach(function(p){
+      var match = p.getAttribute('data-page') === target;
+      p.hidden = !match;
+    });
+    navLinks.forEach(function(a){
+      if(a.getAttribute('data-target') === target){ a.setAttribute('aria-current','page'); }
+      else { a.removeAttribute('aria-current'); }
+    });
+    if(!opts.skipFocus){
+      var heading = document.querySelector('#page-' + target + ' h1');
+      if(heading){ heading.setAttribute('tabindex','-1'); heading.focus({preventScroll:true}); }
+    }
+    if(!opts.skipScroll){ window.scrollTo({top:0, behavior: opts.instant ? 'auto' : 'smooth'}); }
+    navList.classList.remove('is-open');
+    navToggle.setAttribute('aria-expanded','false');
+  }
+
+  navLinks.forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      var target = a.getAttribute('data-target');
+      if(location.hash !== '#' + target){ location.hash = target; }
+      else { showPage(target); }
+    });
+  });
+
+  navToggle.addEventListener('click', function(){
+    var open = navList.classList.toggle('is-open');
+    navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+
+  window.addEventListener('hashchange', function(){
+    showPage(location.hash.replace('#',''));
+  });
+
+  var initial = location.hash.replace('#','') || 'home';
+  showPage(initial, {skipFocus:true, skipScroll:true, instant:true});
+})();
+</script>
+</body>
+</html>
